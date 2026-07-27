@@ -1109,15 +1109,21 @@ document.getElementById('btnIdentify').addEventListener('click', function () {
 const viewport = document.getElementById('viewport');
 const boardWrap = document.getElementById('boardWrap');
 function layoutBoard() {
-  const s = Math.min(1, viewport.clientHeight / BOARD_H);
+  const vh = viewport.clientHeight, vw = viewport.clientWidth;
+  /* 页面在隐藏/零尺寸状态（后台标签、预渲染、WebView 预载）下布局会得到 0，
+     此时跳过；ResizeObserver 会在视口获得真实尺寸后自动重算 */
+  if (!vh || !vw) return;
+  const s = Math.min(1, vh / BOARD_H);
   board.style.transform = `scale(${s})`;
   const w = BOARD_W * s;
-  boardWrap.style.width = Math.max(w, viewport.clientWidth) + 'px';
-  board.style.left = Math.max(0, (viewport.clientWidth - w) / 2) + 'px';
-  board.style.top = Math.max(0, (viewport.clientHeight - BOARD_H * s) / 2) + 'px';
+  boardWrap.style.width = Math.max(w, vw) + 'px';
+  board.style.left = Math.max(0, (vw - w) / 2) + 'px';
+  board.style.top = Math.max(0, (vh - BOARD_H * s) / 2) + 'px';
 }
 layoutBoard();
 window.addEventListener('resize', layoutBoard);
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutBoard).observe(viewport);
+document.addEventListener('visibilitychange', layoutBoard);
 /* 拖拽平移（横向） */
 let pan = null;
 viewport.addEventListener('pointerdown', e => {
