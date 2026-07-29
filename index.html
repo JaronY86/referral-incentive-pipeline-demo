@@ -1280,7 +1280,9 @@ const statusbar = document.getElementById('statusbar');
 const statusText = document.getElementById('statusText');
 const btnRun = document.getElementById('btnRun');
 let runToken = 0;
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* 演示节奏：全链路动画统一加速（1 = 原速；0.5 ≈ 8 秒跑完全程） */
+const RUN_SPEED = 0.5;
+const sleep = ms => new Promise(r => setTimeout(r, Math.round(ms * RUN_SPEED)));
 const ALL_NODES = ['prd', 'nodeA', 'concept', 'fork', 'bg', 'hero', 'tokens', 'join', 'nodeB', 'verify', 'publish', 'ready'];
 function resetRun() {
   runToken++;
