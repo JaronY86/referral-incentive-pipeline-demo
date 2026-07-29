@@ -125,12 +125,23 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
 .alpha-bed { background: conic-gradient(#e9e9ee 0 25%, #fff 0 50%, #e9e9ee 0 75%, #fff 0) 0 0 / 16px 16px; }
 .alpha-bed img { object-fit: contain !important; object-position: center !important; }
 
-/* PRD 卡 */
+/* PRD 卡（阶段二 AI 入口，可点击换 PRD） */
+#node-prd { cursor: pointer; }
+#node-prd:hover { border-color: var(--accent); box-shadow: 0 8px 22px rgba(0, 113, 227, 0.12); }
 .prd-quote {
   margin-top: 8px; padding: 9px 11px; border-radius: 10px;
   background: #f5f5f7; font-size: 11px; line-height: 1.6; color: var(--ink-2);
 }
 .prd-quote b { color: var(--ink); font-weight: 600; }
+.prd-dots { display: flex; gap: 6px; margin-top: 9px; }
+.prd-dots .d {
+  width: 6px; height: 6px; border-radius: 50%; cursor: pointer;
+  background: rgba(0, 0, 0, 0.20);
+}
+.prd-dots .d.on { background: var(--accent); }
+/* 阶段标注 */
+.chips-cap { text-align: center; font-size: 10.5px; color: var(--ink-3); margin-top: 10px; }
+.chips-cap b { color: var(--ink-2); font-weight: 650; }
 
 /* Token 迷你网格 */
 .tk-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 8px; }
@@ -607,7 +618,9 @@ const SKINS = [
     copy: { title: 'タップで集めよう', progressText: 'コレクション進捗', progressPercent: 30,
             targetText: '目標未定', cta: 'あつめる', helper: 'コレクションを進めよう' },
     facts: { bgMeta: '390×845 · sha256:265ac123…', heroMeta: 'BiRefNet 抠图 · 真 RGBA 319×444 · alpha 0..255',
-             dag: '并行峰值 3 · 节省 ≈6.4 分钟 · retry 0', retry: false }
+             dag: '并行峰值 3 · 节省 ≈6.4 分钟 · retry 0', retry: false },
+    prd: { quote: '面向<b>日本市场</b>的可爱<b>点击收集</b>活动；<b>原创日系动漫风</b>；不模仿现有 IP；避免射幸性表达',
+           file: 'jp-cute-click-collect-prd.md' }
   },
   {
     id: 'autumn', name: '秋暮饼干', runLabel: 'run · jp-autumn-cookie-reengage-001',
@@ -628,7 +641,9 @@ const SKINS = [
     copy: { title: '秋のビスケット', progressText: 'ビスケット収集中', progressPercent: 0,
             targetText: '', cta: '集める', helper: 'タップしてビスケットを集めよう' },
     facts: { bgMeta: '390×845 · sha256:ca2d2bc0…', heroMeta: 'BiRefNet 抠图 · 真 RGBA 308×492 · alpha 0..255',
-             dag: '并行峰值 3 · 节省 ≈4.9 分钟 · retry 0', retry: false }
+             dag: '并行峰值 3 · 节省 ≈4.9 分钟 · retry 0', retry: false },
+    prd: { quote: '唤回日本市场<b>休眠用户</b>：<b>秋季饼干收集</b>再访体验；<b>成熟日系动漫风</b>，避免过度可爱；不复用春樱粉彩表达',
+           file: 'jp-autumn-cookie-reengage-prd.md' }
   },
   {
     id: 'sugoroku', name: '空飞双六', runLabel: 'modular · jp-flying-sugoroku-gifts-001',
@@ -649,7 +664,9 @@ const SKINS = [
     copy: { title: 'そらとぶすごろく', progressText: 'あと11マスでギフト', progressPercent: 0,
             targetText: 'GOAL', cta: 'サイコロを振る', helper: '止まったマスでギフトをGET' },
     facts: { bgMeta: '390×845 · sha256:6a0f62ea…', heroMeta: 'BiRefNet 抠图 · 真 RGBA 1150×1368 · alpha 0..255',
-             dag: '并行峰值 3 · 节省 ≈5.5 分钟 · retry ×1（仅重试单分支）', retry: true }
+             dag: '并行峰值 3 · 节省 ≈5.5 分钟 · retry ×1（仅重试单分支）', retry: true },
+    prd: { quote: '面向日本市场的<b>飞行双六</b>轻量推进玩法：掷骰前进、<b>停格得礼物</b>直至终点；<b>粗描边平涂漫画风</b>',
+           file: 'jp-flying-sugoroku-gifts-prd.md' }
   }
 ];
 
@@ -825,7 +842,8 @@ function phoneNodeHtml(id, badge, title, sub) {
     <div class="cap-layer" id="${id}-caps"></div>
   </div>
   <div class="pn-foot"><div class="f-line" id="${id}-foot">带圆点的槽位可换组件 · 悬停出 ‹ ›</div></div>
-  ${id === 'spB' ? `<div class="skin-chips" id="skinChips"></div>
+  ${id === 'spB' ? `<div class="chips-cap"><b>阶段一 · 设计师手动换肤</b>（Vibe Coding，不经 AI）</div>
+  <div class="skin-chips" id="skinChips" style="margin-top:5px"></div>
   <div class="pn-tools"><button class="pn-btn" id="btnIdentify">识别覆盖层 identify()</button></div>` : ''}`;
 }
 const phoneA = document.createElement('div');
@@ -852,11 +870,12 @@ function addCard(id, x, y, w, html, cls) {
   board.appendChild(el);
   return el;
 }
-addCard('prd', 26, 250, 204, `
+addCard('prd', 26, 244, 204, `
   <div class="c-head"><span class="c-badge">1</span><span class="c-title">PRD 输入</span></div>
-  <div class="c-sub">一份自然语言需求，无需设计稿</div>
-  <div class="prd-quote">「面向<b>日本市场</b>的可爱<b>点击收集</b>活动；<b>原创日系动漫风</b>；不模仿现有 IP；避免射幸性表达」</div>
-  <div class="c-mono">jp-cute-click-collect-prd.md</div>`);
+  <div class="c-sub"><b style="color:var(--accent)">阶段二 · AI 入口</b>：点击换一份 PRD，AI 重跑全链路</div>
+  <div class="prd-quote" id="prd-quote"></div>
+  <div class="prd-dots" id="prdDots"></div>
+  <div class="c-mono" id="cap-prd"></div>`);
 addCard('concept', 604, 26, 190, `
   <div class="c-head"><span class="c-badge">3</span><span class="c-title">概念效果图</span></div>
   <div class="c-fig tall"><img id="img-concept" alt="" draggable="false"></div>
@@ -899,6 +918,10 @@ function renderTokenGrid() {
 }
 function syncSkinNodes() {
   const sk = activeSkin();
+  document.getElementById('prd-quote').innerHTML = `「${sk.prd.quote}」`;
+  document.getElementById('cap-prd').textContent = sk.prd.file;
+  document.getElementById('prdDots').innerHTML = SKINS.map((s, i) =>
+    `<span class="d${i === state.skinIdx ? ' on' : ''}" data-i="${i}" title="${s.name}"></span>`).join('');
   document.getElementById('img-concept').src = sk.img.concept;
   document.getElementById('cap-concept').textContent = sk.runLabel;
   document.getElementById('img-bg').src = sk.img.bg;
@@ -908,6 +931,18 @@ function syncSkinNodes() {
   renderTokenGrid();
 }
 syncSkinNodes();
+/* 阶段二 · AI 入口：点 PRD 卡换下一份 PRD（点圆点直选），AI 重跑全链路动画后产出对应皮肤 */
+document.getElementById('node-prd').addEventListener('click', e => {
+  const dot = e.target.closest('.prd-dots .d');
+  aiSwitch(dot ? +dot.dataset.i : (state.skinIdx + 1) % SKINS.length);
+});
+function aiSwitch(i) {
+  if (document.getElementById('btnRun').disabled) return; /* AI 生成中，忽略 */
+  state.skinIdx = i;
+  buildSkinChips();
+  syncSkinNodes();
+  runPipeline();
+}
 
 /* 并行区背景带（位置在堆叠后定） */
 const band = document.createElement('div');
@@ -1273,7 +1308,7 @@ async function runPipeline() {
   /* 最终页先回到灰坯，等 theme-package 到达再上皮肤 */
   state.runSkinB = false; renderPhones();
 
-  await step('prd', null, '解析 PRD → 归一化业务信号（先在真实浏览器开出空白项目，门禁确认后才继续）', 1100);
+  await step('prd', null, `AI 解析 PRD（${activeSkin().prd.file}）→ 归一化业务信号 · 先开空白项目过门禁`, 1100);
   await step('nodeA', 'e-prd-A', '语义选型玩法模型族 → 5 槽位各选一个变体 → 组件装配出灰坯页', 1400);
   await step('concept', 'e-A-concept', '生成整页概念效果图（视觉目标）', 1100);
   await step('fork', 'e-concept-fork', '原子 fork：三条分支同时起工', 600);
