@@ -866,9 +866,10 @@ const BOARD_W = 1800;
 let BOARD_H = 780; /* 分支卡运行时测高堆叠后再定稿 */
 /* 机型档位（对齐真实回归套件；390×845 = Figma 基线钉扎档，其余档表达式全活） */
 const PRESETS = [
-  { id: 'base', label: '390×845',  w: 390,  h: 845,  dispH: 440 },
-  { id: 'max',  label: '430×932',  w: 430,  h: 932,  dispH: 440 },
-  { id: 'pad',  label: '1024×1366', w: 1024, h: 1366, dispH: 360 },
+  { id: 'base',    label: '390×845',  w: 390,  h: 845,  dispH: 440 },
+  /* 16:9 紧凑档：纵横比与基线差异大，多个 clamp 进入活动区间，切换变化直观 */
+  { id: 'compact', label: '360×640',  w: 360,  h: 640,  dispH: 440 },
+  { id: 'pad',     label: '1024×1366', w: 1024, h: 1366, dispH: 360 },
 ];
 function curPreset() { return PRESETS.find(p => p.id === state.presetId); }
 function presetScale(p) { return p.dispH / p.h; }
