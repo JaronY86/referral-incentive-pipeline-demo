@@ -837,7 +837,8 @@ const SLOTS = [
   { id: 'page-background', name: '页面背景', variants: ['page-background/adaptive-fill'] },
   { id: 'activity-title', name: '活动标题', variants: ['activity-title/single-title', 'activity-title/double-title', 'activity-title/title-with-end-time'] },
   { id: 'info-card', name: '信息卡', variants: ['info-card/progress-info-card', 'info-card/timer-info-card', 'info-card/single-progress-bar', 'info-card/personal-info-card'] },
-  { id: 'main-gameplay-area', name: '主玩法区', variants: ['main-gameplay-area/placeholder', 'main-gameplay-area/image-hero'] },
+  /* 主玩法区固定单一形态：灰坯态=占位交接，皮肤态=主体大图（不提供切换） */
+  { id: 'main-gameplay-area', name: '主玩法区', variants: ['main-gameplay-area/image-hero'] },
   { id: 'bottom-button-area', name: '底部按钮区', variants: ['bottom-button-area/single-button', 'bottom-button-area/double-button', 'bottom-button-area/dual-function-single-button'] }
 ];
 /* jp-cute-click-collect-001 正式 plan 的 regions 原文（初始状态 = 真实 run） */
@@ -865,7 +866,6 @@ const BOARD_W = 1800;
 let BOARD_H = 780; /* 分支卡运行时测高堆叠后再定稿 */
 /* 机型档位（对齐真实回归套件；390×845 = Figma 基线钉扎档，其余档表达式全活） */
 const PRESETS = [
-  { id: 'se',   label: '320×568',  w: 320,  h: 568,  dispH: 440 },
   { id: 'base', label: '390×845',  w: 390,  h: 845,  dispH: 440 },
   { id: 'max',  label: '430×932',  w: 430,  h: 932,  dispH: 440 },
   { id: 'pad',  label: '1024×1366', w: 1024, h: 1366, dispH: 360 },
