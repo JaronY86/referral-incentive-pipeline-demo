@@ -103,7 +103,7 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
 .card .c-sub { font-size: 11px; color: var(--ink-3); line-height: 1.5; }
 .card .c-fig { margin-top: 8px; border-radius: 9px; overflow: hidden; border: 1px solid var(--line); }
 .card .c-fig img { display: block; width: 100%; height: 68px; object-fit: cover; object-position: center 20%; }
-.card .c-fig.tall img { height: 88px; object-position: center 30%; }
+.card .c-fig.full img { height: auto; object-fit: unset; } /* 完整展示原图（概念整页图） */
 .card .c-mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 9.5px; color: var(--ink-3); margin-top: 6px; }
 .card.running { border-color: var(--accent); animation: nodePulse 1s ease infinite; }
 .card.done { border-color: rgba(52, 199, 89, 0.55); }
@@ -817,7 +817,7 @@ function activeSkin() { return SKINS[state.skinIdx]; }
 /* ============================================================
    画板布局（固定视角，无缩放；高度自适应贴合，宽度不够只平移）
    ============================================================ */
-const BOARD_W = 1560;
+const BOARD_W = 1800;
 let BOARD_H = 780; /* 分支卡运行时测高堆叠后再定稿 */
 const PHONE_SCALE = 0.52;
 const PW = Math.round(390 * PHONE_SCALE) + 12;   /* 215 */
@@ -856,7 +856,7 @@ board.appendChild(phoneA);
 const phoneB = document.createElement('div');
 phoneB.className = 'phone-node';
 phoneB.id = 'nodeB';
-phoneB.style.cssText = `left: 992px; top: 96px; width: ${PW}px; position: absolute;`;
+phoneB.style.cssText = `left: 1252px; top: 96px; width: ${PW}px; position: absolute;`;
 phoneB.innerHTML = phoneNodeHtml('spB', '4', 'ui-skin 换肤后（最终页）', '同一份 plan · 只注入 Token 与资产 · 皮肤可切换');
 board.appendChild(phoneB);
 
@@ -876,35 +876,35 @@ addCard('prd', 26, 244, 204, `
   <div class="prd-quote" id="prd-quote"></div>
   <div class="prd-dots" id="prdDots"></div>
   <div class="c-mono" id="cap-prd"></div>`);
-addCard('concept', 604, 26, 190, `
+addCard('concept', 540, 26, 184, `
   <div class="c-head"><span class="c-badge">3</span><span class="c-title">概念效果图</span></div>
-  <div class="c-fig tall"><img id="img-concept" alt="" draggable="false"></div>
-  <div class="c-sub" style="margin-top:7px">整页视觉目标 · 三路产物的共同提取源</div>
+  <div class="c-fig full"><img id="img-concept" alt="" draggable="false"></div>
+  <div class="c-sub" style="margin-top:7px">整页视觉目标 · 三路产物提取源</div>
   <div class="c-mono" id="cap-concept"></div>`);
-addCard('fork', 676, 232, 46, `<span>fork</span>`, 'circle')
+addCard('fork', 766, 225, 46, `<span>fork</span>`, 'circle')
   .style.height = '46px';
-addCard('bg', 566, 322, 196, `
+addCard('bg', 846, 322, 196, `
   <div class="c-head"><span class="c-badge" style="background:var(--accent)">A</span><span class="c-title">clean 背景</span></div>
   <div class="c-fig"><img id="img-bg" alt="" draggable="false"></div>
   <div class="c-mono" id="cap-bg"></div>`);
-addCard('hero', 566, 466, 196, `
+addCard('hero', 846, 466, 196, `
   <div class="c-head"><span class="c-badge" style="background:var(--accent)">B</span><span class="c-title">真 RGBA 主体</span></div>
   <div class="c-fig alpha-bed"><img id="img-hero" alt="" style="height:64px" draggable="false"></div>
   <div class="c-mono" id="cap-hero"></div>`);
-addCard('tokens', 566, 614, 196, `
+addCard('tokens', 846, 614, 196, `
   <div class="c-head"><span class="c-badge" style="background:var(--accent)">C</span><span class="c-title">18 × --sp-* Token</span></div>
   <div class="tk-grid" id="tkGrid"></div>
   <div class="c-mono">颜色 / 圆角 / 字体 / 渐变 · registry 全校验</div>`);
-addCard('join', 832, 470, 136, `
+addCard('join', 1080, 470, 136, `
   <div class="c-head"><span class="c-badge">⨝</span><span class="c-title">join</span></div>
   <div class="c-sub">digest 绑定 · 时间重叠<br>theme-package =<br>18 Token + 2 资产</div>`);
-addCard('verify', 1290, 118, 226, `
+addCard('verify', 1540, 118, 226, `
   <div class="c-head"><span class="c-badge warn">◇</span><span class="c-title">机器验收</span></div>
   <div class="c-sub">390×845 · matcher 反向识别<br><b style="color:var(--ink)">identify 5/5</b> · 声明=识别 · 几何零漂移 · runtime error 0</div>`);
-addCard('publish', 1290, 330, 226, `
+addCard('publish', 1540, 330, 226, `
   <div class="c-head"><span class="c-badge">5</span><span class="c-title">publish-final</span></div>
   <div class="c-sub">one-build gate · 标准路径<b style="color:var(--ink)">唯一一次构建</b><br>冻结 digest → build ×1 → probe → 原子提交</div>`);
-addCard('ready', 1290, 540, 226, `
+addCard('ready', 1540, 540, 226, `
   <div class="c-head"><span class="c-badge okc">✓</span><span class="c-title">canonical ready</span></div>
   <div class="c-sub">流程起点打开的<b style="color:var(--ink)">同一个浏览器文档</b>回执 ready_rendered 后，run 才算完成</div>`);
 
@@ -963,7 +963,7 @@ board.insertBefore(band, board.firstChild.nextSibling);
   tokens.style.top = (hero.offsetTop + hero.offsetHeight + gap) + 'px';
   const bandTop = 300;
   const bandBottom = tokens.offsetTop + tokens.offsetHeight + 16;
-  band.style.cssText = `left:552px; top:${bandTop}px; width:224px; height:${bandBottom - bandTop}px;`;
+  band.style.cssText = `left:832px; top:${bandTop}px; width:224px; height:${bandBottom - bandTop}px;`;
   join.style.top = Math.round(hero.offsetTop + hero.offsetHeight / 2 - join.offsetHeight / 2) + 'px';
   BOARD_H = Math.max(720, bandBottom + 74);
   board.style.height = BOARD_H + 'px';
@@ -1043,23 +1043,24 @@ function ortho(pts, r = 12) {
   const pr = anchor('prd', 'right', 0.5);
   addPath('e-prd-A', ortho([[pr[0], pr[1]], [A.x, pr[1]]]));
   addLabel(150, 238, '语义选型 · 5 槽位 plan');
-  /* 灰坯页 → 概念图：右出 → 上折 → 平进 */
-  const cMid = anchor('concept', 'left', 0.5)[1];
+  /* 灰坯页 → 概念图：右出 → 折进（概念图为整图竖版卡） */
+  const cMid = anchor('concept', 'left', 0.42)[1];
   const cX = elRect('concept').x;
-  addPath('e-A-concept', ortho([[A.x + A.w, 170], [556, 170], [556, cMid], [cX, cMid]]));
-  addLabel(524, 158, '进入 ui-skin');
-  /* 概念图 → fork：垂直直线 */
-  const cb = anchor('concept', 'bottom', 0.5), ft = anchor('fork', 'top', 0.5);
-  addPath('e-concept-fork', ortho([[ft[0], cb[1]], [ft[0], ft[1]]]));
-  /* fork → 三分支：统一左轨扇出（树形） */
-  const fl = anchor('fork', 'left', 0.5);
-  const RAIL_L = 528;
+  addPath('e-A-concept', ortho([[A.x + A.w, 170], [514, 170], [514, cMid], [cX, cMid]]));
+  addLabel(514, 205, 'ui-skin');
+  /* 概念图 → fork：按 fork 圆心高度从概念图右缘水平引出（纯水平直线） */
+  const cRect = elRect('concept'), fRect = elRect('fork');
+  const fy = fRect.y + fRect.h / 2;
+  addPath('e-concept-fork', ortho([[cRect.x + cRect.w, fy], [fRect.x, fy]]));
+  /* fork → 三分支：右侧轨道扇出（树形） */
+  const fr = anchor('fork', 'right', 0.5);
+  const RAIL_L = 826;
   [['e-fork-bg', 'bg'], ['e-fork-hero', 'hero'], ['e-fork-tokens', 'tokens']].forEach(([eid, nid]) => {
     const t = anchor(nid, 'left', 0.5);
-    addPath(eid, ortho([[fl[0], fl[1]], [RAIL_L, fl[1]], [RAIL_L, t[1]], [t[0], t[1]]]));
+    addPath(eid, ortho([[fr[0], fr[1]], [RAIL_L, fr[1]], [RAIL_L, t[1]], [t[0], t[1]]]));
   });
   /* 三分支 → join：统一右轨汇入（三个入口错开） */
-  const RAIL_R = 800;
+  const RAIL_R = 1058;
   const jX = elRect('join').x;
   const jMid = anchor('join', 'left', 0.5)[1];
   [['e-bg-join', 'bg', -16], ['e-hero-join', 'hero', 0], ['e-tokens-join', 'tokens', 16]].forEach(([eid, nid, off]) => {
