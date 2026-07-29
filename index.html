@@ -139,6 +139,26 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
   background: rgba(0, 0, 0, 0.20);
 }
 .prd-dots .d.on { background: var(--accent); }
+/* 机型档位（全局同步，两台页面一起变） */
+.preset-chips { display: flex; gap: 6px; align-items: center; }
+.preset-chips .pc {
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: #fff;
+  font-size: 12px; font-weight: 500; color: var(--ink-2);
+  transition: all .16s; white-space: nowrap;
+}
+.preset-chips .pc:hover { border-color: var(--ink-3); color: var(--ink); }
+.preset-chips .pc.sel { background: var(--ink); border-color: var(--ink); color: #fff; }
+/* 机型切换过渡：外框/视图/iframe 同步缓动，iframe 内容随真视口连续自适应 */
+.phone-node { transition: left .55s cubic-bezier(.3,.8,.3,1), width .55s cubic-bezier(.3,.8,.3,1); }
+.phone-view { transition: width .55s cubic-bezier(.3,.8,.3,1), height .55s cubic-bezier(.3,.8,.3,1); }
+.phone-view iframe {
+  display: block; border: 0; background: #fff; transform-origin: top left;
+  transition: width .55s cubic-bezier(.3,.8,.3,1), height .55s cubic-bezier(.3,.8,.3,1), transform .55s cubic-bezier(.3,.8,.3,1);
+}
+.no-anim, .no-anim * { transition: none !important; }
+.cap-layer.settling { opacity: 0; }
+
 /* 阶段标注 */
 .chips-cap { text-align: center; font-size: 10.5px; color: var(--ink-3); margin-top: 10px; }
 .chips-cap b { color: var(--ink-2); font-weight: 650; }
@@ -184,7 +204,6 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
 }
 .phone-view { border-radius: 24px; overflow: hidden; background: #fff; }
-.phone-view .sp-screen { transform-origin: top left; }
 .pn-foot { text-align: center; margin-top: 9px; min-height: 18px; }
 .pn-foot .f-line {
   display: inline-block; font-size: 11px; color: var(--ink-2);
@@ -245,27 +264,6 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
 }
 .slot-cap .arr:hover { background: rgba(0, 0, 0, 0.07); color: var(--ink); }
 .slot-cap .cnt { font-weight: 650; padding: 0 1px; font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 9.5px; }
-.slot-hot { outline: 2px dashed rgba(10, 132, 255, 0.85); outline-offset: -2px; cursor: pointer; }
-.region-flash { animation: regionFlash 0.9s ease; }
-@keyframes regionFlash {
-  0% { box-shadow: inset 0 0 0 3px rgba(10, 132, 255, 0.85); }
-  100% { box-shadow: inset 0 0 0 3px rgba(10, 132, 255, 0); }
-}
-
-/* 识别覆盖层 */
-.id-overlay { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
-.id-box {
-  position: absolute; border: 1.5px dashed #0a84ff; border-radius: 6px;
-  background: rgba(10, 132, 255, 0.05);
-}
-.id-badge {
-  position: absolute; left: -1px; top: -1px;
-  background: #0a84ff; color: #fff;
-  font-size: 10px; font-weight: 600; line-height: 1;
-  padding: 3px 7px; border-radius: 6px 0 8px 0;
-  font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap;
-}
-
 /* 图例 + 提示 + 状态条（固定，不随画布平移） */
 .legend {
   position: absolute; left: 14px; top: 12px; z-index: 40;
@@ -295,6 +293,98 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
 #statusbar.ok .dot { background: var(--ok); animation: none; }
 @keyframes statusBlink { 50% { opacity: 0.3; } }
 
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Referral Incentive Builder</div>
+  <div class="subtitle">工作原理流程图 · 页面就在图上，槽位组件点击即换 · 右侧页面可切换 3 套真实 run 皮肤</div>
+  <div class="spacer"></div>
+  <div class="preset-chips" id="presetChips"></div>
+  <button class="tb-btn primary" id="btnRun">▶ 运行流水线</button>
+  <button class="tb-btn" id="btnResetRun">↺ 重置</button>
+</header>
+
+<div id="viewport">
+  <div id="boardWrap">
+    <div id="board">
+      <svg id="edgeSvg"></svg>
+      <!-- 节点由 JS 渲染 -->
+    </div>
+  </div>
+  <div class="legend">
+    <div class="lg"><svg width="30" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="#a8a8ad" stroke-width="2"/></svg>主流程</div>
+    <div class="lg"><svg width="30" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="rgba(255,69,58,0.7)" stroke-width="2" stroke-dasharray="5 4"/></svg>失败回退 rework</div>
+    <div class="lg"><svg width="30" height="12"><rect x="1" y="1" width="28" height="10" rx="4" fill="rgba(0,113,227,0.06)" stroke="rgba(0,113,227,0.4)" stroke-dasharray="4 3"/></svg>原子 fork 并行区</div>
+  </div>
+  <div class="hint">悬停页面槽位即可换组件 · 画布可左右拖动</div>
+  <div id="statusbar"><span class="dot"></span><span id="statusText"></span></div>
+</div>
+
+<script>
+/* ============================================================
+   数据层 —— 全部取自项目仓库真实文件
+   ============================================================ */
+/* DEFAULT_TOKENS：semantic_gameplay_page/index.tsx 原文（库默认灰坯） */
+const DEFAULT_TOKENS = {
+  '--sp-page-vw': '100vw',
+  '--sp-page-bg': '#ededed',
+  '--sp-page-ink': '#33221c',
+  '--sp-card-bg': '#ffffff',
+  '--sp-card-border': 'transparent',
+  '--sp-card-ink': '#3c271f',
+  '--sp-card-shadow': 'none',
+  '--sp-muted': 'rgba(0, 0, 0, 0.48)',
+  '--sp-primary': '#6b7785',
+  '--sp-primary-ink': '#ffffff',
+  '--sp-secondary': '#cfcfcf',
+  '--sp-secondary-ink': '#222222',
+  '--sp-chip-bg': '#fbd106',
+  '--sp-chip-ink': '#000000',
+  '--sp-progress-track': 'rgba(0, 0, 0, 0.08)',
+  '--sp-progress-fill': 'linear-gradient(90deg, #ff5324 0%, #fff429 100%)',
+  '--sp-radius-card': '36px',
+  '--sp-radius-pill': '999px',
+  '--sp-font': "'TikTok Sans', 'TikTok Text', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  '--sp-title-font': "'Arial Black', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif",
+  /* 自适应表达式（semantic_gameplay_page DEFAULT_TOKENS 原文）：
+     iframe 真视口下按机型活解析；390×845 基线档由 STAGE_PIN 覆盖钉扎 */
+  '--sp-fit-title-size': 'min(32px, 8.5vw)',
+  '--sp-fit-pill-size': 'min(26px, 7vw)',
+  '--sp-fit-pill-size-paired': 'min(20px, 5.2vw)',
+  '--sp-layout-title-top': 'clamp(40px, 8.5vh, 71px)',
+  '--sp-layout-padding-x': '32px',
+  '--sp-layout-max-col': '520px',
+  '--sp-layout-gap': 'clamp(8px, 1.9vh, 16px)',
+  '--sp-layout-main-min-height': 'clamp(160px, 28.4vh, 240px)',
+  '--sp-layout-main-margin-x': '12px',
+  '--sp-layout-main-overlap': '20px',
+  '--sp-layout-stage-max': '800px',
+  '--sp-layout-bottom-height': 'clamp(112px, 17.1vh, 144px)',
+  '--sp-layout-bottom-safe': 'clamp(12px, 4.3vh, 36px)'
+};
+/* 390×845 基线钉扎（clamp/min 在该档位的解析值，同正式 Playground） */
+const STAGE_PIN = {
+  '--sp-page-vw': '390px',
+  '--sp-fit-title-size': '32px',
+  '--sp-fit-pill-size': '26px',
+  '--sp-fit-pill-size-paired': '20px',
+  '--sp-layout-title-top': '71px',
+  '--sp-layout-padding-x': '32px',
+  '--sp-layout-max-col': '520px',
+  '--sp-layout-gap': '16px',
+  '--sp-layout-main-min-height': '240px',
+  '--sp-layout-main-margin-x': '12px',
+  '--sp-layout-stage-max': '800px',
+  '--sp-layout-bottom-height': '144px',
+  '--sp-layout-bottom-safe': '36px'
+};
+/* iframe 真视口内的完整样式：组件层逐字移植 + 识别覆盖层（与 Playground 同机制：
+   每档机型 = 独立小视口，vh/vw/clamp/min 表达式按机型真实解析） */
+const SP_CSS = `
+html, body { margin: 0; padding: 0; overflow: hidden; }
+* { box-sizing: border-box; }
 /* ============================================================
    语义组件层 —— 逐字移植自项目仓库 Lynx SCSS：
    semantic_gameplay_page / semantic_regions / semantic_bottom_button
@@ -304,8 +394,8 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
 .sp-screen {
   box-sizing: border-box; position: relative;
   display: flex; flex-direction: column; align-items: center;
-  width: 390px; min-width: 320px;
-  height: 845px; min-height: 534px;
+  width: 100%; min-width: 320px;
+  height: 100vh; min-height: 534px;
   padding-bottom: var(--sp-layout-bottom-safe);
   overflow: hidden;
   background: var(--sp-page-bg);
@@ -523,77 +613,31 @@ code { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
   color: rgba(0, 0, 0, 0.5); font-family: var(--sp-font);
   font-size: 12px; font-weight: 400; line-height: 1.3; text-align: center; opacity: 0.8;
 }
-</style>
-</head>
-<body>
 
-<header class="topbar">
-  <div class="brand">Referral Incentive Builder</div>
-  <div class="subtitle">工作原理流程图 · 页面就在图上，槽位组件点击即换 · 右侧页面可切换 3 套真实 run 皮肤</div>
-  <div class="spacer"></div>
-  <button class="tb-btn primary" id="btnRun">▶ 运行流水线</button>
-  <button class="tb-btn" id="btnResetRun">↺ 重置</button>
-</header>
 
-<div id="viewport">
-  <div id="boardWrap">
-    <div id="board">
-      <svg id="edgeSvg"></svg>
-      <!-- 节点由 JS 渲染 -->
-    </div>
-  </div>
-  <div class="legend">
-    <div class="lg"><svg width="30" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="#a8a8ad" stroke-width="2"/></svg>主流程</div>
-    <div class="lg"><svg width="30" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="rgba(255,69,58,0.7)" stroke-width="2" stroke-dasharray="5 4"/></svg>失败回退 rework</div>
-    <div class="lg"><svg width="30" height="12"><rect x="1" y="1" width="28" height="10" rx="4" fill="rgba(0,113,227,0.06)" stroke="rgba(0,113,227,0.4)" stroke-dasharray="4 3"/></svg>原子 fork 并行区</div>
-  </div>
-  <div class="hint">悬停页面槽位即可换组件 · 画布可左右拖动</div>
-  <div id="statusbar"><span class="dot"></span><span id="statusText"></span></div>
-</div>
+.slot-hot { outline: 2px dashed rgba(10, 132, 255, 0.85); outline-offset: -2px; cursor: pointer; }
+.region-flash { animation: regionFlash 0.9s ease; }
+@keyframes regionFlash {
+  0% { box-shadow: inset 0 0 0 3px rgba(10, 132, 255, 0.85); }
+  100% { box-shadow: inset 0 0 0 3px rgba(10, 132, 255, 0); }
+}
 
-<script>
-/* ============================================================
-   数据层 —— 全部取自项目仓库真实文件
-   ============================================================ */
-/* DEFAULT_TOKENS：semantic_gameplay_page/index.tsx 原文（库默认灰坯） */
-const DEFAULT_TOKENS = {
-  '--sp-page-vw': '100vw',
-  '--sp-page-bg': '#ededed',
-  '--sp-page-ink': '#33221c',
-  '--sp-card-bg': '#ffffff',
-  '--sp-card-border': 'transparent',
-  '--sp-card-ink': '#3c271f',
-  '--sp-card-shadow': 'none',
-  '--sp-muted': 'rgba(0, 0, 0, 0.48)',
-  '--sp-primary': '#6b7785',
-  '--sp-primary-ink': '#ffffff',
-  '--sp-secondary': '#cfcfcf',
-  '--sp-secondary-ink': '#222222',
-  '--sp-chip-bg': '#fbd106',
-  '--sp-chip-ink': '#000000',
-  '--sp-progress-track': 'rgba(0, 0, 0, 0.08)',
-  '--sp-progress-fill': 'linear-gradient(90deg, #ff5324 0%, #fff429 100%)',
-  '--sp-radius-card': '36px',
-  '--sp-radius-pill': '999px',
-  '--sp-font': "'TikTok Sans', 'TikTok Text', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  '--sp-title-font': "'Arial Black', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif"
-};
-/* 390×845 基线钉扎（clamp/min 在该档位的解析值，同正式 Playground） */
-const STAGE_PIN = {
-  '--sp-page-vw': '390px',
-  '--sp-fit-title-size': '32px',
-  '--sp-fit-pill-size': '26px',
-  '--sp-fit-pill-size-paired': '20px',
-  '--sp-layout-title-top': '71px',
-  '--sp-layout-padding-x': '32px',
-  '--sp-layout-max-col': '520px',
-  '--sp-layout-gap': '16px',
-  '--sp-layout-main-min-height': '240px',
-  '--sp-layout-main-margin-x': '12px',
-  '--sp-layout-stage-max': '800px',
-  '--sp-layout-bottom-height': '144px',
-  '--sp-layout-bottom-safe': '36px'
-};
+/* 识别覆盖层 */
+.id-overlay { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
+.id-box {
+  position: absolute; border: 1.5px dashed #0a84ff; border-radius: 6px;
+  background: rgba(10, 132, 255, 0.05);
+}
+.id-badge {
+  position: absolute; left: -1px; top: -1px;
+  background: #0a84ff; color: #fff;
+  font-size: 10px; font-weight: 600; line-height: 1;
+  padding: 3px 7px; border-radius: 6px 0 8px 0;
+  font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap;
+}
+
+`;
+
 /* ============================================================
    皮肤注册表 —— 每条 = 一个正式 run 的真实产物
    （theme-package 18 Token 原文 + clean 背景 + RGBA 主体 + 概念图 + plan 文案 + DAG 事实）
@@ -806,7 +850,7 @@ const REAL_PLAN = {
 };
 /* 共享 plan：两台页面同一份（结构与皮肤分离的直观证明）；skinIdx 默认最新 run
    深链接 ?skin=cute|autumn|sugoroku 直达指定皮肤 */
-const state = { plan: { ...REAL_PLAN }, identify: false, runSkinB: true, skinIdx: 2 };
+const state = { plan: { ...REAL_PLAN }, identify: false, runSkinB: true, skinIdx: 2, presetId: 'base' };
 (function () {
   const want = new URLSearchParams(location.search).get('skin');
   const i = SKINS.findIndex(s => s.id === want);
@@ -819,9 +863,16 @@ function activeSkin() { return SKINS[state.skinIdx]; }
    ============================================================ */
 const BOARD_W = 1800;
 let BOARD_H = 780; /* 分支卡运行时测高堆叠后再定稿 */
-const PHONE_SCALE = 0.52;
-const PW = Math.round(390 * PHONE_SCALE) + 12;   /* 215 */
-const PH = Math.round(845 * PHONE_SCALE) + 12;   /* 451 */
+/* 机型档位（对齐真实回归套件；390×845 = Figma 基线钉扎档，其余档表达式全活） */
+const PRESETS = [
+  { id: 'se',   label: '320×568',  w: 320,  h: 568,  dispH: 440 },
+  { id: 'base', label: '390×845',  w: 390,  h: 845,  dispH: 440 },
+  { id: 'max',  label: '430×932',  w: 430,  h: 932,  dispH: 440 },
+  { id: 'pad',  label: '1024×1366', w: 1024, h: 1366, dispH: 360 },
+];
+function curPreset() { return PRESETS.find(p => p.id === state.presetId); }
+function presetScale(p) { return p.dispH / p.h; }
+const PHONE_CENTER = { nodeA: 381.5, nodeB: 1359.5 };
 
 const board = document.getElementById('board');
 const edgeSvg = document.getElementById('edgeSvg');
@@ -836,8 +887,8 @@ function phoneNodeHtml(id, badge, title, sub) {
   return `
   <div class="pn-cap"><span class="t"><span class="b">${badge}</span>${title}</span><div class="s">${sub}</div></div>
   <div class="phone-wrap">
-    <div class="phone-shell"><div class="phone-view" style="width:${PW - 12}px;height:${PH - 12}px">
-      <div class="sp-screen" id="${id}" style="transform: scale(${PHONE_SCALE})"></div>
+    <div class="phone-shell"><div class="phone-view" id="${id}-view" style="width:203px;height:440px">
+      <iframe id="${id}" title="${id}" style="width:390px;height:845px;transform:scale(0.5207)"></iframe>
     </div></div>
     <div class="cap-layer" id="${id}-caps"></div>
   </div>
@@ -849,16 +900,89 @@ function phoneNodeHtml(id, badge, title, sub) {
 const phoneA = document.createElement('div');
 phoneA.className = 'phone-node';
 phoneA.id = 'nodeA';
-phoneA.style.cssText = `left: 274px; top: 96px; width: ${PW}px; position: absolute;`;
+phoneA.style.cssText = `left: 274px; top: 96px; width: 215px; position: absolute;`;
 phoneA.innerHTML = phoneNodeHtml('spA', '2', 'Framework 装配（灰坯）', '结构由 5 槽位组件装配 · 库默认 Token');
 board.appendChild(phoneA);
 
 const phoneB = document.createElement('div');
 phoneB.className = 'phone-node';
 phoneB.id = 'nodeB';
-phoneB.style.cssText = `left: 1252px; top: 96px; width: ${PW}px; position: absolute;`;
+phoneB.style.cssText = `left: 1252px; top: 96px; width: 215px; position: absolute;`;
 phoneB.innerHTML = phoneNodeHtml('spB', '4', 'ui-skin 换肤后（最终页）', '同一份 plan · 只注入 Token 与资产 · 皮肤可切换');
 board.appendChild(phoneB);
+
+/* 手机画布 = 同源 iframe 真视口（与 Playground 设备预设同机制）；组件 CSS 逐字注入 */
+['spA', 'spB'].forEach(id => {
+  const doc = document.getElementById(id).contentDocument;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${SP_CSS}</style></head><body><div class="sp-screen" id="root"></div></body></html>`);
+  doc.close();
+});
+function frameDoc(id) { return document.getElementById(id).contentDocument; }
+
+/* 机型档位应用：两台页面全局同步；animate=true 时外框缓动、iframe 内容随真视口连续自适应 */
+function applyPreset(animate) {
+  const pz = curPreset();
+  const s = presetScale(pz);
+  [['spA', 'nodeA'], ['spB', 'nodeB']].forEach(([sid, nid]) => {
+    const frame = document.getElementById(sid);
+    const view = document.getElementById(sid + '-view');
+    const node = document.getElementById(nid);
+    if (!animate) [frame, view, node].forEach(el => el.classList.add('no-anim'));
+    frame.style.width = pz.w + 'px';
+    frame.style.height = pz.h + 'px';
+    frame.style.transform = `scale(${s})`;
+    view.style.width = Math.round(pz.w * s) + 'px';
+    view.style.height = Math.round(pz.h * s) + 'px';
+    const dispW = Math.round(pz.w * s) + 12;
+    node.style.width = dispW + 'px';
+    node.style.left = Math.round(PHONE_CENTER[nid] - dispW / 2) + 'px';
+    document.getElementById(sid + '-caps').classList.add('settling');
+    if (!animate) { void node.offsetWidth; [frame, view, node].forEach(el => el.classList.remove('no-anim')); }
+  });
+  /* 过渡期用定时器驱动（虚拟/真实时钟下都确定；连线 25fps 跟随） */
+  const stepMs = 40;
+  let remain = animate ? 640 : 0;
+  (function tick() {
+    updateEdges();
+    if (remain > 0) { remain -= stepMs; setTimeout(tick, stepMs); }
+    else {
+      /* 过渡结束后强制落位一次：真实浏览器已到位（无感知），
+         个别环境（如无头虚拟时钟）过渡停滞时保证终值确定 */
+      [['spA', 'nodeA'], ['spB', 'nodeB']].forEach(([sid, nid]) => {
+        [document.getElementById(sid), document.getElementById(sid + '-view'), document.getElementById(nid)]
+          .forEach(el => el.classList.add('no-anim'));
+      });
+      void document.getElementById('spA').offsetWidth;
+      [['spA', 'nodeA'], ['spB', 'nodeB']].forEach(([sid, nid]) => {
+        [document.getElementById(sid), document.getElementById(sid + '-view'), document.getElementById(nid)]
+          .forEach(el => el.classList.remove('no-anim'));
+      });
+      buildCaps('spA'); buildCaps('spB');
+      renderIdentify();
+      document.querySelectorAll('.cap-layer').forEach(c => c.classList.remove('settling'));
+      updateEdges();
+    }
+  })();
+}
+function buildPresetChips() {
+  const host = document.getElementById('presetChips');
+  host.innerHTML = '<span style="font-size:12px;color:var(--ink-3);margin-right:2px">机型</span>' +
+    PRESETS.map(pz => `<button class="pc${pz.id === state.presetId ? ' sel' : ''}" data-p="${pz.id}">${pz.label}</button>`).join('');
+  host.querySelectorAll('.pc').forEach(btn => btn.addEventListener('click', () => setPreset(btn.dataset.p)));
+}
+function setPreset(pid) {
+  if (document.getElementById('btnRun').disabled) return; /* 动画运行中禁切 */
+  if (pid === state.presetId) return;
+  state.presetId = pid;
+  buildPresetChips();
+  /* 先切 Token 档位语义（基线=钉扎，其余=表达式全活），尺寸过渡随后展开 */
+  ['spA', 'spB'].forEach(sid => {
+    const root = frameDoc(sid).getElementById('root');
+    applyTokens(root, sid === 'spB' && state.runSkinB ? activeSkin() : null);
+  });
+  applyPreset(true);
+}
 
 /* ---- 普通卡节点 ---- */
 function addCard(id, x, y, w, html, cls) {
@@ -1037,7 +1161,13 @@ function ortho(pts, r = 12) {
   d += ` L ${pts[pts.length - 1][0]} ${pts[pts.length - 1][1]}`;
   return d;
 }
-(function drawEdges() {
+function updateEdges() {
+  /* 记住运行态染色，重建后恢复（机型过渡期间每帧重算路径） */
+  const keep = {};
+  Object.entries(edgeEls).forEach(([id, el]) => { keep[id] = el.getAttribute('class'); });
+  edgeSvg.querySelectorAll('path.edge, text.edge-label').forEach(el => el.remove());
+  Object.keys(edgeEls).forEach(k => delete edgeEls[k]);
+  {
   const A = elRect('nodeA'), B = elRect('nodeB');
   /* PRD → 灰坯页：水平直线（进 phone 左边缘） */
   const pr = anchor('prd', 'right', 0.5);
@@ -1090,7 +1220,15 @@ function ortho(pts, r = 12) {
   addPath('e-rework', ortho([[v[0], v[1]], [v[0], 14], [c[0], 14], [c[0], c[1]]]), 'dashed red');
   edgeEls['e-rework'].setAttribute('marker-end', 'url(#arrow-red)');
   addLabel(1060, 34, 'rework · 设计问题只能整体退回上游', 'red');
-})();
+  }
+  Object.entries(keep).forEach(([id, cls]) => {
+    if (edgeEls[id] && cls && cls !== edgeEls[id].getAttribute('class')) {
+      edgeEls[id].setAttribute('class', cls);
+      if (cls.includes('done') || cls.includes('active')) edgeEls[id].setAttribute('marker-end', 'url(#arrow-blue)');
+    }
+  });
+}
+updateEdges();
 
 function setEdge(id, s) {
   const p = edgeEls[id];
@@ -1109,10 +1247,12 @@ function setNode(id, s) {
 /* ============================================================
    页面渲染 + 槽位就地切换
    ============================================================ */
-function applyTokens(scr, sk) {
-  const tokens = { ...DEFAULT_TOKENS, ...(sk ? sk.tokens : {}), ...STAGE_PIN };
-  scr.style.cssText = `transform: scale(${PHONE_SCALE})`;
-  for (const [k, v] of Object.entries(tokens)) scr.style.setProperty(k, v);
+function applyTokens(root, sk) {
+  /* 390×845 基线档 = Figma 钉扎（验收几何）；其余机型档 Token 表达式保持全活，由 iframe 真视口解析 */
+  const pin = state.presetId === 'base' ? STAGE_PIN : {};
+  const tokens = { ...DEFAULT_TOKENS, ...(sk ? sk.tokens : {}), ...pin };
+  root.style.cssText = '';
+  for (const [k, v] of Object.entries(tokens)) root.style.setProperty(k, v);
 }
 function slotIndex(slotId) {
   const s = SLOTS.find(s => s.id === slotId);
@@ -1133,11 +1273,11 @@ const slotInds = { spA: {}, spB: {} };
 function setHot(scrId, slotId, on) {
   const ind = slotInds[scrId][slotId];
   if (ind) ind.classList.toggle('hot', on);
-  const region = document.getElementById(scrId).querySelector(`[data-l1-region="${slotId}"]`);
+  const region = frameDoc(scrId).querySelector(`[data-l1-region="${slotId}"]`);
   if (region) region.classList.toggle('slot-hot', on);
 }
 function renderScreen(scrId, sk, flashSlot) {
-  const scr = document.getElementById(scrId);
+  const scr = frameDoc(scrId).getElementById('root');
   applyTokens(scr, sk);
   scr.innerHTML = SLOTS.map(s => VARIANTS[state.plan[s.id]].html(sk)).join('');
   /* 槽位交互：hover 显示切换胶囊 + 点击切换 */
@@ -1157,18 +1297,19 @@ function renderScreen(scrId, sk, flashSlot) {
 }
 /* 槽位指示器：默认圆点（当前变体高亮），悬停浮现 ‹ n/m › 胶囊 */
 function buildCaps(scrId) {
-  const scr = document.getElementById(scrId);
+  const scr = frameDoc(scrId).getElementById('root');
   const layer = document.getElementById(scrId + '-caps');
   layer.innerHTML = '';
   slotInds[scrId] = {};
+  const ps = presetScale(curPreset());
   scr.querySelectorAll('[data-l1-region]').forEach(el => {
     const slotId = el.dataset.l1Region;
     const { i, n } = slotIndex(slotId);
     if (n < 2) return;
     const ind = document.createElement('div');
     ind.className = 'slot-ind';
-    const right = (el.offsetLeft + el.offsetWidth) * PHONE_SCALE;
-    const top = el.offsetTop * PHONE_SCALE;
+    const right = (el.offsetLeft + el.offsetWidth) * ps;
+    const top = el.offsetTop * ps;
     ind.style.left = (right - 2) + 'px';
     /* 骑跨在槽位上边界 */
     ind.style.top = (top - 11) + 'px';
@@ -1214,14 +1355,15 @@ function setSkin(i) {
 }
 /* 识别覆盖层（最终页） */
 function renderIdentify() {
-  const scr = document.getElementById('spB');
+  const scr = frameDoc('spB').getElementById('root');
   const old = scr.querySelector('.id-overlay');
   if (old) old.remove();
   if (!state.identify) return;
-  const overlay = document.createElement('div');
+  const fdoc = frameDoc('spB');
+  const overlay = fdoc.createElement('div');
   overlay.className = 'id-overlay';
   scr.querySelectorAll('[data-l1-region]').forEach(el => {
-    const box = document.createElement('div');
+    const box = fdoc.createElement('div');
     box.className = 'id-box';
     box.style.cssText = `left:${el.offsetLeft}px; top:${el.offsetTop}px; width:${el.offsetWidth}px; height:${el.offsetHeight}px;`;
     box.innerHTML = `<div class="id-badge">${el.dataset.l1Region} ✓</div>`;
@@ -1229,8 +1371,15 @@ function renderIdentify() {
   });
   scr.appendChild(overlay);
 }
+/* ?preset=se|base|max|pad 深链接直达机型档位 */
+(function () {
+  const want = new URLSearchParams(location.search).get('preset');
+  if (PRESETS.some(pz => pz.id === want)) state.presetId = want;
+})();
 renderPhones();
 buildSkinChips();
+buildPresetChips();
+applyPreset(false);
 document.getElementById('btnIdentify').addEventListener('click', function () {
   state.identify = !state.identify;
   this.classList.toggle('on', state.identify);
